@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>НЕ НАЖИМАЙ (нажми)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Montserrat:wght@900&display=swap');
+
+  :root{
+    --neon-pink:#ff2bd6;
+    --neon-green:#39ff14;
+    --neon-yellow:#fffb00;
+    --neon-cyan:#00fff7;
+    --bg:#0a0014;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--bg);
+    color:#fff;
+    font-family:'Montserrat',sans-serif;
+    overflow-x:hidden;
+    cursor: crosshair;
+  }
+
+  /* шум на фоне */
+  .noise{
+    position:fixed;inset:0;
+    pointer-events:none;
+    z-index:1;
+    opacity:.06;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:noiseMove .2s steps(2) infinite;
+  }
+  @keyframes noiseMove{
+    0%{transform:translate(0,0)}
+    50%{transform:translate(-2%,2%)}
+    100%{transform:translate(2%,-1%)}
+  }
+
+  .scanlines{
+    position:fixed;inset:0;z-index:2;pointer-events:none;
+    background:repeating-linear-gradient(
+      0deg, rgba(0,0,0,.15) 0px, rgba(0,0,0,.15) 1px, transparent 1px, transparent 3px
+    );
+  }
+
+  section{
+    position:relative;z-index:3;
+    padding:60px 20px;
+    max-width:900px;
+    margin:0 auto;
+  }
+
+  /* HERO */
+  .hero{
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    gap:30px;
+  }
+
+  .glitch-title{
+    font-family:'Press Start 2P',monospace;
+    font-size:clamp(20px,5vw,42px);
+    color:var(--neon-green);
+    text-shadow:
+      2px 0 var(--neon-pink),
+      -2px 0 var(--neon-cyan);
+    animation:flicker 1.6s infinite, glitchpos 3s infinite;
+    line-height:1.6;
+  }
+  @keyframes flicker{
+    0%,19%,21%,23%,25%,54%,56%,100%{opacity:1;}
+    20%,24%,55%{opacity:.4;}
+  }
+  @keyframes glitchpos{
+    0%,100%{transform:translate(0,0)}
+    20%{transform:translate(-2px,1px)}
+    40%{transform:translate(2px,-1px)}
+    60%{transform:translate(-1px,-2px)}
+    80%{transform:translate(1px,2px)}
+  }
+
+  .cat-box{
+    font-size:90px;
+    position:relative;
+    user-select:none;
+  }
+  .cat{
+    display:inline-block;
+    transition:transform .08s ease-out;
+  }
+
+  .start-btn{
+    font-family:'Press Start 2P',monospace;
+    font-size:16px;
+    padding:22px 38px;
+    border:4px solid var(--neon-yellow);
+    background:var(--neon-pink);
+    color:#fff;
+    cursor:pointer;
+    position:relative;
+    transition:transform .12s, background .15s, color .15s;
+    box-shadow:6px 6px 0 var(--neon-cyan);
+  }
+  .start-btn:active{
+    transform:translate(4px,4px);
+    box-shadow:2px 2px 0 var(--neon-cyan);
+  }
+
+  h2{
+    font-family:'Press Start 2P',monospace;
+    color:var(--neon-yellow);
+    font-size:clamp(16px,3vw,24px);
+    text-align:center;
+    margin-bottom:30px;
+    text-shadow:3px 3px 0 var(--neon-pink);
+  }
+
+  /* MEME GRID */
+  .meme-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:20px;
+  }
+  .meme-card{
+    background:#170029;
+    border:3px solid var(--neon-cyan);
+    padding:20px 10px;
+    text-align:center;
+    font-size:60px;
+    cursor:pointer;
+    animation:jelly 3s ease-in-out infinite;
+    animation-delay:calc(var(--i) * .2s);
+    position:relative;
+    overflow:hidden;
+  }
+  .meme-card span.caption{
+    display:block;
+    font-family:'Press Start 2P',monospace;
+    font-size:9px;
+    margin-top:14px;
+    color:var(--neon-green);
+  }
+  @keyframes jelly{
+    0%,100%{transform:scale(1,1) rotate(0deg);}
+    25%{transform:scale(1.05,.95) rotate(-1deg);}
+    50%{transform:scale(.96,1.04) rotate(1deg);}
+    75%{transform:scale(1.03,.97) rotate(-1deg);}
+  }
+  .meme-card:hover{
+    border-color:var(--neon-pink);
+    animation-play-state:paused;
+    transform:scale(1.12) rotate(3deg);
+    z-index:5;
+  }
+  .meme-card.pop{
+    animation:popOpen .3s ease;
+  }
+  @keyframes popOpen{
+    0%{transform:scale(1);}
+    50%{transform:scale(1.4) rotate(8deg);}
+    100%{transform:scale(1.12);}
+  }
+
+  /* GENERATOR */
+  .generator{
+    text-align:center;
+  }
+  .gen-output{
+    margin:30px auto;
+    min-height:140px;
+    border:3px dashed var(--neon-yellow);
+    padding:20px;
+    font-size:20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    background:rgba(255,255,255,0.03);
+  }
+  .gen-output .emoji{font-size:60px;}
+  .gen-btn{
+    font-family:'Press Start 2P',monospace;
+    font-size:13px;
+    padding:16px 26px;
+    background:var(--neon-green);
+    border:4px solid #000;
+    color:#000;
+    cursor:pointer;
+    box-shadow:5px 5px 0 var(--neon-pink);
+  }
+  .gen-btn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--neon-pink);}
+
+  /* CHAT */
+  .chat-box{
+    border:3px solid var(--neon-pink);
+    background:#0d0019;
+    max-width:600px;
+    margin:0 auto;
+    height:340px;
+    display:flex;
+    flex-direction:column;
+  }
+  .chat-log{
+    flex:1;
+    overflow-y:auto;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .msg{
+    padding:10px 14px;
+    border-radius:10px;
+    max-width:75%;
+    font-size:14px;
+    animation:popIn .25s ease;
+  }
+  @keyframes popIn{from{transform:scale(.7);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .msg.bot{
+    background:var(--neon-cyan);
+    color:#000;
+    align-self:flex-start;
+  }
+  .msg.user{
+    background:var(--neon-pink);
+    align-self:flex-end;
+  }
+  .chat-input-row{
+    display:flex;
+    border-top:3px solid var(--neon-pink);
+  }
+  .chat-input-row input{
+    flex:1;
+    background:#000;
+    color:var(--neon-green);
+    border:none;
+    padding:14px;
+    font-family:'Montserrat',sans-serif;
+    font-size:14px;
+  }
+  .chat-input-row input:focus{outline:none;}
+  .chat-input-row button{
+    background:var(--neon-yellow);
+    border:none;
+    padding:0 20px;
+    font-weight:900;
+    cursor:pointer;
+  }
+
+  footer{
+    text-align:center;
+    padding:50px 20px 100px;
+    font-family:'Press Start 2P',monospace;
+    font-size:11px;
+    color:var(--neon-pink);
+  }
+  .secret-btn{
+    margin-top:20px;
+    font-family:'Press Start 2P',monospace;
+    font-size:12px;
+    padding:16px 24px;
+    background:#000;
+    border:3px solid var(--neon-green);
+    color:var(--neon-green);
+    cursor:pointer;
+  }
+  .secret-btn:hover{
+    background:var(--neon-green);
+    color:#000;
+  }
+
+  /* floating stickers */
+  .sticker{
+    position:fixed;
+    pointer-events:none;
+    font-size:40px;
+    z-index:50;
+    animation:stickerFly 1s ease-out forwards;
+  }
+  @keyframes stickerFly{
+    0%{opacity:1;transform:translateY(0) scale(.6) rotate(0deg);}
+    100%{opacity:0;transform:translateY(-80px) scale(1.4) rotate(40deg);}
+  }
+
+  .toast{
+    position:fixed;
+    bottom:20px;left:50%;
+    transform:translateX(-50%) translateY(100px);
+    background:var(--neon-yellow);
+    color:#000;
+    padding:14px 22px;
+    font-family:'Press Start 2P',monospace;
+    font-size:11px;
+    border:3px solid #000;
+    z-index:100;
+    transition:transform .3s ease;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+
+  .mute-btn{
+    position:fixed;
+    top:14px;right:14px;
+    z-index:60;
+    background:#000;
+    border:2px solid var(--neon-cyan);
+    color:var(--neon-cyan);
+    font-family:'Press Start 2P',monospace;
+    font-size:10px;
+    padding:10px 12px;
+    cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="scanlines"></div>
+<button class="mute-btn" id="muteBtn">🔊 ЗВУК</button>
+
+<section class="hero">
+  <div class="glitch-title" id="heroTitle">НАЖМИ ЧТО-НИБУДЬ.<br>СЕРЬЕЗНО.<br>ХУЖЕ НЕ БУДЕТ.</div>
+  <div class="cat-box"><span class="cat" id="cat">🐱</span></div>
+  <button class="start-btn" id="startBtn">Я НЕ БОЮСЬ</button>
+</section>
+
+<section>
+  <h2>🔥 МЕМЫ ДНЯ 🔥</h2>
+  <div class="meme-grid" id="memeGrid"></div>
+</section>
+
+<section class="generator">
+  <h2>🎲 ГЕНЕРАТОР СЛУЧАЙНЫХ ПРИКОЛОВ 🎲</h2>
+  <div class="gen-output" id="genOutput">
+    <div class="emoji">🤔</div>
+    <div>жми и узнаешь</div>
+  </div>
+  <button class="gen-btn" id="genBtn">СГЕНЕРИРОВАТЬ ХАОС</button>
+</section>
+
+<section>
+  <h2>💬 БОЛТАЛКА С БОТОМ 💬</h2>
+  <div class="chat-box">
+    <div class="chat-log" id="chatLog">
+      <div class="msg bot">привет... я не настоящий, но мне норм</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="напиши что-нибудь умное (необязательно)">
+      <button id="chatSend">➤</button>
+    </div>
+  </div>
+</section>
+
+<footer id="footerEnd">
+  конец сайта. дальше пустота.
+  <br><br>
+  <button class="secret-btn" id="secretBtn">⬆ СЕКРЕТНЫЙ УРОВЕНЬ ⬆</button>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== AUDIO (генерируется через Web Audio API, без внешних файлов) ===== */
+let audioCtx = null;
+let muted = false;
+function ctx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+function beep(freq=440, dur=0.08, type='square', vol=0.05){
+  if(muted) return;
+  try{
+    const c = ctx();
+    const o = c.createOscillator();
+    const g = c.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.value = vol;
+    o.connect(g); g.connect(c.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+    o.stop(c.currentTime + dur);
+  }catch(e){}
+}
+function sfxClick(){ beep(150,0.05,'square',0.06); setTimeout(()=>beep(80,0.08,'square',0.05),40); }
+function sfxHover(){ beep(880,0.03,'sine',0.025); }
+function sfxModem(){ [600,900,500,1100].forEach((f,i)=>setTimeout(()=>beep(f,0.05,'sawtooth',0.03),i*60)); }
+function sfxPop(){ beep(1200,0.06,'triangle',0.05); }
+function sfxWoosh(){ beep(200,0.15,'sawtooth',0.03); }
+
+document.getElementById('muteBtn').addEventListener('click', e=>{
+  muted = !muted;
+  e.target.textContent = muted ? '🔇 ТИШИНА' : '🔊 ЗВУК';
+});
+
+/* фоновая тихая чиптюн-мелодия */
+let bgPlaying = false;
+function startBg(){
+  if(bgPlaying) return;
+  bgPlaying = true;
+  const notes = [220,261,329,220,196,261,220,164];
+  let i = 0;
+  setInterval(()=>{
+    if(!muted) beep(notes[i % notes.length], 0.3, 'sine', 0.008);
+    i++;
+  }, 500);
+}
+document.body.addEventListener('click', startBg, {once:true});
+
+/* ===== ТОСТЫ ===== */
+function showToast(text){
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+/* ===== ЛЕТАЮЩИЕ СТИКЕРЫ ===== */
+const stickerEmojis = ['🐸','💀','🔥','😂','🤡','👽','🍆','💩','✨','🐙'];
+function spawnSticker(x,y){
+  const s = document.createElement('div');
+  s.className = 'sticker';
+  s.textContent = stickerEmojis[Math.floor(Math.random()*stickerEmojis.length)];
+  s.style.left = x+'px';
+  s.style.top = y+'px';
+  document.body.appendChild(s);
+  setTimeout(()=>s.remove(), 1000);
+}
+
+/* ===== КОТ СЛЕДИТ ЗА КУРСОРОМ ===== */
+const cat = document.getElementById('cat');
+let catX=0, catY=0;
+document.addEventListener('mousemove', e=>{
+  const rect = cat.getBoundingClientRect();
+  const dx = e.clientX - (rect.left+rect.width/2);
+  const dy = e.clientY - (rect.top+rect.height/2);
+  const dist = Math.min(Math.sqrt(dx*dx+dy*dy)/20, 15);
+  const angle = Math.atan2(dy,dx);
+  catX = Math.cos(angle)*dist;
+  catY = Math.sin(angle)*dist;
+  cat.style.transform = `translate(${catX}px,${catY}px) scaleX(${dx<0?-1:1})`;
+});
+
+/* ===== HERO КНОПКА: УБЕГАЕТ + ТЕКСТ МЕНЯЕТСЯ ===== */
+const startBtn = document.getElementById('startBtn');
+const btnTexts = ['Я НЕ БОЮСЬ','ДАВАЙ УЖЕ','ОКЕЙ, БУМЕР','ПОЕХАЛИ!','НУ ЛАДНО','А ВДРУГ?'];
+let btnIndex = 0;
+let dodgeCount = 0;
+
+startBtn.addEventListener('mouseenter', ()=>{
+  sfxModem();
+  if(dodgeCount < 3){
+    dodgeCount++;
+    const maxX = window.innerWidth - startBtn.offsetWidth - 40;
+    const maxY = 80;
+    startBtn.style.position='relative';
+    startBtn.style.left = (Math.random()*maxX*0.6 - maxX*0.3)+'px';
+    startBtn.style.top = (Math.random()*maxY - maxY/2)+'px';
+    btnIndex = (btnIndex+1) % btnTexts.length;
+    startBtn.textContent = btnTexts[btnIndex];
+  } else {
+    startBtn.style.background = `hsl(${Math.random()*360},90%,55%)`;
+  }
+});
+
+startBtn.addEventListener('click', ()=>{
+  sfxClick();
+  const old = startBtn.textContent;
+  startBtn.textContent = 'НЕ НАЖИМАТЬ';
+  startBtn.style.background = '#ff0000';
+  document.body.style.filter = 'invert(1)';
+  setTimeout(()=>{
+    document.body.style.filter = '';
+    startBtn.textContent = old;
+    startBtn.style.background = '';
+    document.getElementById('memeGrid').scrollIntoView({behavior:'smooth'});
+  }, 400);
+});
+
+/* ===== МЕМЫ ===== */
+const memeData = [
+  {emoji:'🐸', caption:'я тут подумал...'},
+  {emoji:'💀', caption:'кажется мы все умрем'},
+  {emoji:'🤡', caption:'это нормально, да?'},
+  {emoji:'🐙', caption:'а что если...'},
+  {emoji:'👽', caption:'не понимаю но согласен'},
+  {emoji:'🍕', caption:'голод правит миром'}
+];
+const memeGrid = document.getElementById('memeGrid');
+memeData.forEach((m,i)=>{
+  const card = document.createElement('div');
+  card.className='meme-card';
+  card.style.setProperty('--i', i);
+  card.innerHTML = `${m.emoji}<span class="caption">${m.caption}</span>`;
+  card.addEventListener('mouseenter', sfxHover);
+  card.addEventListener('click', ()=>{
+    sfxPop();
+    card.classList.remove('pop');
+    void card.offsetWidth;
+    card.classList.add('pop');
+    spawnSticker(card.getBoundingClientRect().left+50, card.getBoundingClientRect().top);
+    showToast('источник: где-то в интернете, 2014 год');
+  });
+  memeGrid.appendChild(card);
+});
+
+/* ===== ГЕНЕРАТОР ХАОСА ===== */
+const genEmojis = ['🦄','🤖','🐍','🧦','🍔','👁️','🛸','🎺','🦖','🍌'];
+const genPhrases = [
+  'это нормально, я думаю',
+  'никто не пострадал. наверное',
+  'верните мне мой понедельник',
+  'котики решают всё',
+  'это не баг, это фича',
+  'я в домике',
+  'ИИ уже всё захватил, расслабься',
+  'звучит как план'
+];
+const genBtn = document.getElementById('genBtn');
+const genOutput = document.getElementById('genOutput');
+genBtn.addEventListener('click', ()=>{
+  sfxClick();
+  genOutput.style.transform = 'scale(0.9) rotate(2deg)';
+  setTimeout(()=>{ genOutput.style.transform=''; }, 150);
+  const emo = genEmojis[Math.floor(Math.random()*genEmojis.length)];
+  const phrase = genPhrases[Math.floor(Math.random()*genPhrases.length)];
+  genOutput.innerHTML = `<div class="emoji">${emo}</div><div>${phrase}</div>`;
+  spawnSticker(genBtn.getBoundingClientRect().left, genBtn.getBoundingClientRect().top);
+});
+
+/* ===== ЧАТ-БОЛТАЛКА ===== */
+const chatLog = document.getElementById('chatLog');
+const chatInput = document.getElementById('chatInput');
+const chatBotReplies = [
+  'это база',
+  'согласен, но не до конца',
+  'звучит как сюжет фильма',
+  'хм. а если наоборот?',
+  '42',
+  'я бы на твоём месте лёг спать',
+  'у меня нет рук, но я аплодирую',
+  'мемная энергия зашкаливает',
+  'ты — главный герой этого чата',
+  'просто дыши'
+];
+function addMsg(text, who){
+  const m = document.createElement('div');
+  m.className = 'msg ' + who;
+  m.textContent = text;
+  chatLog.appendChild(m);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+function sendMsg(){
+  const val = chatInput.value.trim();
+  if(!val) return;
+  addMsg(val, 'user');
+  sfxClick();
+  chatInput.value = '';
+  setTimeout(()=>{
+    addMsg(chatBotReplies[Math.floor(Math.random()*chatBotReplies.length)], 'bot');
+    sfxPop();
+  }, 500);
+}
+document.getElementById('chatSend').addEventListener('click', sendMsg);
+chatInput.addEventListener('keydown', e=>{ if(e.key==='Enter') sendMsg(); });
+
+/* ===== СЕКРЕТНЫЙ УРОВЕНЬ ===== */
+document.getElementById('secretBtn').addEventListener('click', ()=>{
+  sfxWoosh();
+  document.body.style.transition = 'transform .6s ease';
+  document.body.style.transform = 'rotate(360deg)';
+  window.scrollTo({top:0, behavior:'smooth'});
+  setTimeout(()=>{ document.body.style.transform=''; }, 700);
+  showToast('добро пожаловать обратно, путник');
+});
+
+/* ===== ЛЮБОЕ НАЖАТИЕ КЛАВИШИ — ХАОС ===== */
+document.addEventListener('keydown', ()=>{
+  if(Math.random() < 0.3){
+    beep(200+Math.random()*800, 0.05, 'square', 0.02);
+    spawnSticker(Math.random()*window.innerWidth, Math.random()*window.innerHeight);
+  }
+});
+
+/* ===== HERO TITLE: рандомный глитч-сдвиг текста время от времени ===== */
+setInterval(()=>{
+  if(Math.random()<0.3){
+    document.getElementById('heroTitle').style.textShadow =
+      `${Math.random()*6-3}px 0 var(--neon-pink), ${Math.random()*6-3}px 0 var(--neon-cyan)`;
+  }
+}, 1200);
+</script>
+
+</body>
+</html>

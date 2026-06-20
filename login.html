@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<body>
+    <div class="login">
+        <input type="text" placeholder="Введите логин" id="login"/>
+        <input type="password" placeholder="Введите пароль" id="pass"/>
+        <button onclick="Login()">Войти</button>
+        <a href="/">Создать аккаунт</a>
+    </div>
+    
+</body>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    .login {
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 24px;
+        padding: 40px 32px;
+        width: 100%;
+        max-width: 460px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        transition: transform 0.3s ease;
+    }
+
+    .login:hover {
+        transform: translateY(-5px);
+    }
+
+    .login input {
+        width: 100%;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+        font-size: 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        background: #ffffff;
+        outline: none;
+        transition: all 0.3s ease;
+        color: #1a202c;
+        font-weight: 500;
+    }
+
+    .login input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .login input::placeholder {
+        color: #a0aec0;
+        font-weight: 400;
+    }
+
+    .login input[type="date"] {
+        color: #1a202c;
+        position: relative;
+    }
+
+    .login input[type="date"]:before {
+        content: attr(placeholder);
+        position: absolute;
+        color: #a0aec0;
+    }
+
+    button {
+        width: 100%;
+        padding: 14px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 8px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    }
+
+    button:active {
+        transform: translateY(0);
+    }
+
+    /* Стили для автозаполнения */
+    .login input:-webkit-autofill,
+    .login input:-webkit-autofill:hover,
+    .login input:-webkit-autofill:focus {
+        -webkit-box-shadow: 0 0 0px 1000px white inset;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 520px) {
+        .login {
+            padding: 30px 20px;
+            margin: 16px;
+        }
+        
+        .login input {
+            padding: 12px 16px;
+            font-size: 14px;
+        }
+        
+        button {
+            padding: 12px 18px;
+            font-size: 15px;
+        }
+    }
+    </style>
+
+<script>
+async function Login() {
+    let obj = {}
+    let param = ['login','pass']
+    for (let i = 0; i < param.length; i++) {
+        const element = param[i];
+        obj[element] = document.getElementById(element).value || 'null'
+    }
+
+    console.log(obj)
+
+    const response = await fetch('http://localhost:3000/trylogin', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(obj)
+    })
+    if (!response.ok) {
+        throw new Error('Ошибка сети');
+    }
+    let data = await response.json();
+    
+    console.log(data)
+    window.location.href = 'http://localhost:3000/main';
+}
+
+</script>
+
+
+</html>
